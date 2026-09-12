@@ -1,87 +1,60 @@
-from dataclasses import dataclass, field
 from datetime import date
-from typing import List
+
+# 1. Входные данные (простые типы)
+car_brand: str = "Toyota"
+car_model: str = "Camry"
+current_mileage: int = 60000
+target_mileage: int = 65000
+
+current_date: date = date(2026, 9, 12)
+target_date: date = date(2026, 10, 1)
 
 
-@dataclass
-class MaintenanceTask:
-    """Класс для представления сервисной задачи."""
-    title: str
-    target_date: date
-    target_mileage: int
-    is_completed: bool = False
-
-    def check_overdue(self, current_date: date, current_mileage: int) -> bool:
-        """Проверка просрочки задачи по дате или пробегу."""
-        if self.is_completed:
-            return False
-        return current_date >= self.target_date or current_mileage >= self.target_mileage
+# 2. Функция 1: Расчет оставшегося пробега
+def calculate_remaining_mileage(current_km: int, target_km: int) -> int:
+    """Вычисляет оставшийся пробег до обслуживания."""
+    remaining_km: int = target_km - current_km
+    return remaining_km
 
 
-@dataclass
-class Car:
-    """Класс для хранения данных об автомобиле."""
-    make: str
-    model: str
-    year: int
-    current_mileage: int
-    tasks: List[MaintenanceTask] = field(default_factory=list)
+# 3. Функция 2: Проверка необходимости ТО
+def check_maintenance_status(
+    current_km: int, target_km: int, now_date: date, due_date: date
+) -> str:
+    """Проверяет превышение лимитов по пробегу или дате."""
+    is_mileage_exceeded: bool = current_km >= target_km
+    is_date_exceeded: bool = now_date >= due_date
 
-    def add_task(self, task: MaintenanceTask) -> None:
-        """Добавление новой задачи в список обслуживания."""
-        self.tasks.append(task)
+    if is_mileage_exceeded or is_date_exceeded:
+        return "ВНИМАНИЕ: Требуется срочное техническое обслуживание!"
+    else:
+        return "Обслуживание не требуется. Автомобиль в норме."
 
-    def get_overdue_tasks(self, today: date) -> List[MaintenanceTask]:
-        """Получение списка просроченных задач."""
-        return [
-            task for task in self.tasks
-            if task.check_overdue(today, self.current_mileage)
-        ]
+
+# 4. Функция 3: Формирование отчета
+def format_car_report(brand: str, model: str, mileage: int, status: str) -> str:
+    """Формирует текстовый отчет о состоянии ТС."""
+    report: str = (
+        f"=== Отчет о состоянии ТС ===\n"
+        f"Автомобиль: {brand} {model}\n"
+        f"Текущий пробег: {mileage} км\n"
+        f"Статус: {status}"
+    )
+    return report
 
 
 def main() -> None:
-    # Инициализация объекта автомобиля
-    my_car = Car(
-        make="Toyota",
-        model="Camry",
-        year=2020,
-        current_mileage=60000
+    # Вызовы функций и операции
+    remaining_km = calculate_remaining_mileage(current_mileage, target_mileage)
+    status_msg = check_maintenance_status(
+        current_mileage, target_mileage, current_date, target_date
     )
 
-    # Создание сервисных задач
-    task1 = MaintenanceTask(
-        title="Замена моторного масла и фильтра",
-        target_date=date(2026, 4, 15),
-        target_mileage=65000
-    )
-    task2 = MaintenanceTask(
-        title="Замена тормозных колодок",
-        target_date=date(2026, 2, 1),
-        target_mileage=58000
-    )
+    report_text = format_car_report(car_brand, car_model, current_mileage, status_msg)
 
-    # Добавление задач к автомобилю
-    my_car.add_task(task1)
-    my_car.add_task(task2)
-
-    today = date.today()
-
-    # Вывод информации в консоль
-    print(f"Автомобиль: {my_car.make} {my_car.model} ({my_car.year} г.)")
-    print(f"Текущий пробег: {my_car.current_mileage} км\n")
-
-    print("--- Список запланированных задач ---")
-    for idx, task in enumerate(my_car.tasks, start=1):
-        status = "Выполнено" if task.is_completed else "В ожидании"
-        print(f"{idx}. {task.title} | Срок: до {task.target_date} или {task.target_mileage} км [{status}]")
-
-    print("\n--- Требуют внимания (просрочены или подошел срок) ---")
-    overdue = my_car.get_overdue_tasks(today)
-    if overdue:
-        for task in overdue:
-            print(f"⚠️  {task.title} (Превышен пробег или дата)")
-    else:
-        print("Все задачи выполняются по графику.")
+    # Вывод результатов
+    print(report_text)
+    print(f"Остаток пробега до ТО: {remaining_km} км")
 
 
 if __name__ == "__main__":
