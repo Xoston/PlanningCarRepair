@@ -1,11 +1,19 @@
 ﻿from vehicles import (
-    add_vehicle, find_vehicles, filter_vehicles_by_mileage, sort_vehicles_by_mileage
+    add_vehicle,
+    find_vehicles,
+    sort_vehicles_by_mileage,
 )
 from maintenance import (
-    is_service_due, get_service_status, create_maintenance_record, cancel_maintenance_record
+    is_service_due,
+    get_service_status,
+    create_maintenance_record,
+    cancel_maintenance_record,
 )
 from storage import (
-    load_vehicles, save_vehicles, load_maintenance, save_maintenance
+    load_vehicles,
+    save_vehicles,
+    load_maintenance,
+    save_maintenance,
 )
 from utils import input_int, input_float, input_date
 
@@ -18,11 +26,18 @@ def show_vehicles_list(vehicles_list: list) -> None:
     if not vehicles_list:
         print("Список автомобилей пуст.")
         return
-    print(f"\n{'ID':<4} | {'Марка и Модель':<20} | {'Год':<6} | {'Пробег (км)':<10}")
+    header = (
+        f"\n{'ID':<4} | {'Марка и Модель':<20} | "
+        f"{'Год':<6} | {'Пробег (км)':<10}"
+    )
+    print(header)
     print("-" * 50)
     for v in vehicles_list:
         title = f"{v['brand']} {v['model']}"
-        print(f"{v['id']:<4} | {title:<20} | {v['year']:<6} | {v['mileage']:<10}")
+        print(
+            f"{v['id']:<4} | {title:<20} | "
+            f"{v['year']:<6} | {v['mileage']:<10}"
+        )
 
 
 def main() -> None:
@@ -62,18 +77,20 @@ def main() -> None:
             if v_id not in vehicles:
                 print("Автомобиль с таким ID не найден.")
                 continue
-            last_service = input_int("Введите пробег на последнем ТО (км): ")
-            due = is_service_due(vehicles[v_id]["mileage"], last_service)
+            last_s = input_int("Введите пробег на последнем ТО (км): ")
+            due = is_service_due(vehicles[v_id]["mileage"], last_s)
             print(get_service_status(due))
         elif choice == "5":
             v_id = input_int("Введите ID автомобиля: ")
             if v_id not in vehicles:
                 print("Автомобиль с таким ID не найден.")
                 continue
-            work = input("Наименование работы (напр., Замена масла): ").strip()
+            work = input("Наименование работы: ").strip()
             s_date = input_date("Дата выполнения (ДД.ММ.ГГГГ): ")
             cost = input_float("Стоимость (руб): ")
-            rec = create_maintenance_record(records, v_id, work, s_date, cost)
+            rec = create_maintenance_record(
+                records, v_id, work, s_date, cost
+            )
             save_maintenance(MAINTENANCE_FILE, records)
             print(f"Запись о ТО #{rec['id']} добавлена.")
         elif choice == "6":
@@ -88,9 +105,12 @@ def main() -> None:
                 print("Записи ТО отсутствуют.")
             else:
                 for r in records:
-                    print(f"Запись #{r['id']} | Авто ID: {r['vehicle_id']} | "
-                          f"Работа: {r['work_name']} | Дата: {r['service_date']} | "
-                          f"Цена: {r['cost']} руб.")
+                    print(
+                        f"Запись #{r['id']} | Авто ID: {r['vehicle_id']} | "
+                        f"Работа: {r['work_name']} | "
+                        f"Дата: {r['service_date']} | "
+                        f"Цена: {r['cost']} руб."
+                    )
         elif choice == "8":
             sorted_v = sort_vehicles_by_mileage(vehicles)
             show_vehicles_list(sorted_v)

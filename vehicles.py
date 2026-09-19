@@ -28,7 +28,8 @@ def find_vehicles(
     query_lower = query.lower()
     return [
         v for v in vehicles.values()
-        if query_lower in v["brand"].lower() or query_lower in v["model"].lower()
+        if query_lower in v["brand"].lower()
+        or query_lower in v["model"].lower()
     ]
 
 
@@ -36,7 +37,7 @@ def filter_vehicles_by_mileage(
     vehicles: Dict[int, Dict[str, Any]],
     max_mileage: int
 ) -> List[Dict[str, Any]]:
-    """Отобрать автомобили с пробегом не более max_mileage (использует генератор)."""
+    """Отобрать автомобили с пробегом не более max_mileage."""
     return [v for v in vehicles.values() if v["mileage"] <= max_mileage]
 
 

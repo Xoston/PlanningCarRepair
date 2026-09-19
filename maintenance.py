@@ -2,13 +2,17 @@
 from typing import List, Dict, Any
 
 
-def is_service_due(current_mileage: int, last_service_mileage: int, interval: int = 10000) -> bool:
+def is_service_due(
+    current_mileage: int,
+    last_service_mileage: int,
+    interval: int = 10000
+) -> bool:
     """Проверить, превышен ли интервал между ТО."""
     return (current_mileage - last_service_mileage) >= interval
 
 
 def get_service_status(is_due: bool) -> str:
-    """Вернуть текстовый статус необходимости прохождения ТО (функция из ПР1)."""
+    """Вернуть текстовый статус необходимости прохождения ТО."""
     if is_due:
         return "Требуется проведение технического обслуживания!"
     return "Автомобиль обслужен, прохождение ТО не требуется."
@@ -34,7 +38,9 @@ def create_maintenance_record(
     return new_record
 
 
-def cancel_maintenance_record(records: List[Dict[str, Any]], record_id: int) -> bool:
+def cancel_maintenance_record(
+    records: List[Dict[str, Any]], record_id: int
+) -> bool:
     """Удалить запись о ТО по идентификатору."""
     for idx, rec in enumerate(records):
         if rec["id"] == record_id:

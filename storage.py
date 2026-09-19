@@ -12,15 +12,19 @@ def load_vehicles(filepath: str) -> Dict[int, Dict[str, Any]]:
             raw_data = json.load(f)
             return {item["id"]: item for item in raw_data}
     except (json.JSONDecodeError, KeyError):
-        print(f"Предупреждение: Файл {filepath} поврежден или имеет неверный формат.")
+        print(f"Предупреждение: Файл {filepath} поврежден.")
         return {}
 
 
-def save_vehicles(filepath: str, vehicles: Dict[int, Dict[str, Any]]) -> None:
+def save_vehicles(
+    filepath: str, vehicles: Dict[int, Dict[str, Any]]
+) -> None:
     """Сохранить словарь автомобилей в JSON-файл."""
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     with open(filepath, "w", encoding="utf-8") as f:
-        json.dump(list(vehicles.values()), f, ensure_ascii=False, indent=2)
+        json.dump(
+            list(vehicles.values()), f, ensure_ascii=False, indent=2
+        )
 
 
 def load_maintenance(filepath: str) -> List[Dict[str, Any]]:
@@ -35,7 +39,9 @@ def load_maintenance(filepath: str) -> List[Dict[str, Any]]:
         return []
 
 
-def save_maintenance(filepath: str, records: List[Dict[str, Any]]) -> None:
+def save_maintenance(
+    filepath: str, records: List[Dict[str, Any]]
+) -> None:
     """Сохранить список записей ТО в JSON-файл."""
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     with open(filepath, "w", encoding="utf-8") as f:
