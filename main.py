@@ -1,60 +1,106 @@
-from datetime import date
+﻿from vehicles import (
+    add_vehicle, find_vehicles, filter_vehicles_by_mileage, sort_vehicles_by_mileage
+)
+from maintenance import (
+    is_service_due, get_service_status, create_maintenance_record, cancel_maintenance_record
+)
+from storage import (
+    load_vehicles, save_vehicles, load_maintenance, save_maintenance
+)
+from utils import input_int, input_float, input_date
 
-# 1. Входные данные (простые типы)
-car_brand: str = "Toyota"
-car_model: str = "Camry"
-current_mileage: int = 60000
-target_mileage: int = 65000
-
-current_date: date = date(2026, 9, 12)
-target_date: date = date(2026, 10, 1)
-
-
-# 2. Функция 1: Расчет оставшегося пробега
-def calculate_remaining_mileage(current_km: int, target_km: int) -> int:
-    """Вычисляет оставшийся пробег до обслуживания."""
-    remaining_km: int = target_km - current_km
-    return remaining_km
+VEHICLES_FILE = "data/vehicles.json"
+MAINTENANCE_FILE = "data/maintenance.json"
 
 
-# 3. Функция 2: Проверка необходимости ТО
-def check_maintenance_status(
-    current_km: int, target_km: int, now_date: date, due_date: date
-) -> str:
-    """Проверяет превышение лимитов по пробегу или дате."""
-    is_mileage_exceeded: bool = current_km >= target_km
-    is_date_exceeded: bool = now_date >= due_date
-
-    if is_mileage_exceeded or is_date_exceeded:
-        return "ВНИМАНИЕ: Требуется срочное техническое обслуживание!"
-    else:
-        return "Обслуживание не требуется. Автомобиль в норме."
-
-
-# 4. Функция 3: Формирование отчета
-def format_car_report(brand: str, model: str, mileage: int, status: str) -> str:
-    """Формирует текстовый отчет о состоянии ТС."""
-    report: str = (
-        f"=== Отчет о состоянии ТС ===\n"
-        f"Автомобиль: {brand} {model}\n"
-        f"Текущий пробег: {mileage} км\n"
-        f"Статус: {status}"
-    )
-    return report
+def show_vehicles_list(vehicles_list: list) -> None:
+    """Вывести список автомобилей в консоль."""
+    if not vehicles_list:
+        print("Список автомобилей пуст.")
+        return
+    print(f"\n{'ID':<4} | {'Марка и Модель':<20} | {'Год':<6} | {'Пробег (км)':<10}")
+    print("-" * 50)
+    for v in vehicles_list:
+        title = f"{v['brand']} {v['model']}"
+        print(f"{v['id']:<4} | {title:<20} | {v['year']:<6} | {v['mileage']:<10}")
 
 
 def main() -> None:
-    # Вызовы функций и операции
-    remaining_km = calculate_remaining_mileage(current_mileage, target_mileage)
-    status_msg = check_maintenance_status(
-        current_mileage, target_mileage, current_date, target_date
-    )
+    vehicles = load_vehicles(VEHICLES_FILE)
+    records = load_maintenance(MAINTENANCE_FILE)
 
-    report_text = format_car_report(car_brand, car_model, current_mileage, status_msg)
+    while True:
+        print("\n=== Система планирования ТО автомобиля ===")
+        print("1. Показать все автомобили")
+        print("2. Добавить автомобиль")
+        print("3. Найти автомобиль по марке/модели")
+        print("4. Проверить необходимость ТО")
+        print("5. Запланировать/Добавить запись о ТО")
+        print("6. Отменить запись о ТО")
+        print("7. Показать все записи ТО")
+        print("8. Сортировать автомобили по пробегу")
+        print("0. Выход")
 
-    # Вывод результатов
-    print(report_text)
-    print(f"Остаток пробега до ТО: {remaining_km} км")
+        choice = input("Выберите действие: ").strip()
+
+        if choice == "1":
+            show_vehicles_list(list(vehicles.values()))
+        elif choice == "2":
+            brand = input("Марка: ").strip()
+            model = input("Модель: ").strip()
+            year = input_int("Год выпуска: ")
+            mileage = input_int("Текущий пробег (км): ")
+            v_id = add_vehicle(vehicles, brand, model, year, mileage)
+            save_vehicles(VEHICLES_FILE, vehicles)
+            print(f"Автомобиль успешно добавлен под ID #{v_id}")
+        elif choice == "3":
+            q = input("Введите марку или модель для поиска: ")
+            found = find_vehicles(vehicles, q)
+            show_vehicles_list(found)
+        elif choice == "4":
+            v_id = input_int("Введите ID автомобиля: ")
+            if v_id not in vehicles:
+                print("Автомобиль с таким ID не найден.")
+                continue
+            last_service = input_int("Введите пробег на последнем ТО (км): ")
+            due = is_service_due(vehicles[v_id]["mileage"], last_service)
+            print(get_service_status(due))
+        elif choice == "5":
+            v_id = input_int("Введите ID автомобиля: ")
+            if v_id not in vehicles:
+                print("Автомобиль с таким ID не найден.")
+                continue
+            work = input("Наименование работы (напр., Замена масла): ").strip()
+            s_date = input_date("Дата выполнения (ДД.ММ.ГГГГ): ")
+            cost = input_float("Стоимость (руб): ")
+            rec = create_maintenance_record(records, v_id, work, s_date, cost)
+            save_maintenance(MAINTENANCE_FILE, records)
+            print(f"Запись о ТО #{rec['id']} добавлена.")
+        elif choice == "6":
+            r_id = input_int("Введите ID записи ТО для отмены: ")
+            if cancel_maintenance_record(records, r_id):
+                save_maintenance(MAINTENANCE_FILE, records)
+                print("Запись о ТО успешно отменена.")
+            else:
+                print("Запись с таким ID не найдена.")
+        elif choice == "7":
+            if not records:
+                print("Записи ТО отсутствуют.")
+            else:
+                for r in records:
+                    print(f"Запись #{r['id']} | Авто ID: {r['vehicle_id']} | "
+                          f"Работа: {r['work_name']} | Дата: {r['service_date']} | "
+                          f"Цена: {r['cost']} руб.")
+        elif choice == "8":
+            sorted_v = sort_vehicles_by_mileage(vehicles)
+            show_vehicles_list(sorted_v)
+        elif choice == "0":
+            print("Сохранение данных и завершение работы...")
+            save_vehicles(VEHICLES_FILE, vehicles)
+            save_maintenance(MAINTENANCE_FILE, records)
+            break
+        else:
+            print("Неверный ввод. Попробуйте снова.")
 
 
 if __name__ == "__main__":
