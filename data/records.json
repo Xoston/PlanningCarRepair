@@ -1,0 +1,10 @@
+[
+    {
+        "id": 1,
+        "vehicle_id": 1,
+        "task_id": 1,
+        "scheduled_date": "2026-10-01",
+        "mileage_at_service": 60000,
+        "is_completed": false
+    }
+]

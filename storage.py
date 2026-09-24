@@ -9,7 +9,7 @@ from models.records import MaintenanceRecord
 def load_vehicles(filepath: str) -> List[Vehicle]:
     if not os.path.exists(filepath):
         return []
-    with open(filepath, "r", encoding="utf-8") as f:
+    with open(filepath, "r", encoding="utf-8-sig") as f:
         data = json.load(f)
         return [
             Vehicle(
@@ -41,7 +41,7 @@ def save_vehicles(filepath: str, vehicles: List[Vehicle]) -> None:
 def load_tasks(filepath: str) -> List[ServiceTask]:
     if not os.path.exists(filepath):
         return []
-    with open(filepath, "r", encoding="utf-8") as f:
+    with open(filepath, "r", encoding="utf-8-sig") as f:
         data = json.load(f)
         return [ServiceTask.from_data(item) for item in data]
 
@@ -67,7 +67,7 @@ def load_records(
 ) -> List[MaintenanceRecord]:
     if not os.path.exists(filepath):
         return []
-    with open(filepath, "r", encoding="utf-8") as f:
+    with open(filepath, "r", encoding="utf-8-sig") as f:
         data = json.load(f)
 
     v_map = {v.id: v for v in vehicles}
