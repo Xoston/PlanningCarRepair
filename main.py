@@ -1,126 +1,92 @@
-﻿from vehicles import (
-    add_vehicle,
-    find_vehicles,
-    sort_vehicles_by_mileage,
-)
-from maintenance import (
-    is_service_due,
-    get_service_status,
-    create_maintenance_record,
-    cancel_maintenance_record,
-)
-from storage import (
-    load_vehicles,
-    save_vehicles,
-    load_maintenance,
-    save_maintenance,
-)
-from utils import input_int, input_float, input_date
+﻿from typing import List
+from models import Vehicle, ServiceTask, MaintenanceRecord
+from models.vehicles import add_vehicle, find_vehicle_by_id, show_vehicles
+from models.tasks import add_task, show_tasks, find_task_by_id
+from models.records import create_record, show_records
+from storage import load_vehicles, save_vehicles, load_tasks, save_tasks, load_records, save_records
+from utils import input_int
 
 VEHICLES_FILE = "data/vehicles.json"
-MAINTENANCE_FILE = "data/maintenance.json"
+TASKS_FILE = "data/tasks.json"
+RECORDS_FILE = "data/records.json"
 
 
-def show_vehicles_list(vehicles_list: list) -> None:
-    """Вывести список автомобилей в консоль."""
-    if not vehicles_list:
-        print("Список автомобилей пуст.")
+def create_new_record_flow(
+    records: List[MaintenanceRecord],
+    vehicles: List[Vehicle],
+    tasks: List[ServiceTask]
+) -> None:
+    if not vehicles or not tasks:
+        print("Ошибка: Для создания записи должны быть зарегистрированы авто и работы.")
         return
-    header = (
-        f"\n{'ID':<4} | {'Марка и Модель':<20} | "
-        f"{'Год':<6} | {'Пробег (км)':<10}"
-    )
-    print(header)
-    print("-" * 50)
-    for v in vehicles_list:
-        title = f"{v['brand']} {v['model']}"
-        print(
-            f"{v['id']:<4} | {title:<20} | "
-            f"{v['year']:<6} | {v['mileage']:<10}"
-        )
+
+    show_vehicles(vehicles)
+    v_id = input_int("Введите ID автомобиля: ")
+    vehicle = find_vehicle_by_id(vehicles, v_id)
+    if not vehicle:
+        print("Автомобиль не найден!")
+        return
+
+    show_tasks(tasks)
+    t_id = input_int("Введите ID работы: ")
+    task = find_task_by_id(tasks, t_id)
+    if not task:
+        print("Работа не найдена!")
+        return
+
+    rec_id = len(records) + 1
+    date_str = input("Введите планируемую дату (ГГГГ-ММ-ДД): ")
+    target_mileage = vehicle.mileage + task.interval_km
+
+    rec = create_record(records, rec_id, vehicle, task, date_str, target_mileage)
+    print(f"\nЗапись успешно создана!\n{rec}")
 
 
 def main() -> None:
     vehicles = load_vehicles(VEHICLES_FILE)
-    records = load_maintenance(MAINTENANCE_FILE)
+    tasks = load_tasks(TASKS_FILE)
+    records = load_records(RECORDS_FILE, vehicles, tasks)
 
     while True:
         print("\n=== Система планирования ТО автомобиля ===")
-        print("1. Показать все автомобили")
-        print("2. Добавить автомобиль")
-        print("3. Найти автомобиль по марке/модели")
-        print("4. Проверить необходимость ТО")
-        print("5. Запланировать/Добавить запись о ТО")
-        print("6. Отменить запись о ТО")
-        print("7. Показать все записи ТО")
-        print("8. Сортировать автомобили по пробегу")
+        print("1. Показать список авто")
+        print("2. Добавить авто")
+        print("3. Показать виды ТО")
+        print("4. Добавить вид ТО")
+        print("5. Запланировать ТО")
+        print("6. Показать все записи ТО")
         print("0. Выход")
 
-        choice = input("Выберите действие: ").strip()
-
+        choice = input("Выберите действие: ")
         if choice == "1":
-            show_vehicles_list(list(vehicles.values()))
+            show_vehicles(vehicles)
         elif choice == "2":
-            brand = input("Марка: ").strip()
-            model = input("Модель: ").strip()
+            v_id = len(vehicles) + 1
+            make = input("Марка: ")
+            model = input("Модель: ")
             year = input_int("Год выпуска: ")
-            mileage = input_int("Текущий пробег (км): ")
-            v_id = add_vehicle(vehicles, brand, model, year, mileage)
-            save_vehicles(VEHICLES_FILE, vehicles)
-            print(f"Автомобиль успешно добавлен под ID #{v_id}")
+            mileage = input_int("Текущий пробег: ")
+            add_vehicle(vehicles, Vehicle(v_id, make, model, year, mileage))
+            print("Автомобиль добавлен.")
         elif choice == "3":
-            q = input("Введите марку или модель для поиска: ")
-            found = find_vehicles(vehicles, q)
-            show_vehicles_list(found)
+            show_tasks(tasks)
         elif choice == "4":
-            v_id = input_int("Введите ID автомобиля: ")
-            if v_id not in vehicles:
-                print("Автомобиль с таким ID не найден.")
-                continue
-            last_s = input_int("Введите пробег на последнем ТО (км): ")
-            due = is_service_due(vehicles[v_id]["mileage"], last_s)
-            print(get_service_status(due))
+            t_id = len(tasks) + 1
+            title = input("Название работы: ")
+            interval = input_int("Интервал (км): ")
+            cost = float(input_int("Стоимость (руб): "))
+            add_task(tasks, ServiceTask(t_id, title, interval, cost))
+            print("Вид работы добавлен.")
         elif choice == "5":
-            v_id = input_int("Введите ID автомобиля: ")
-            if v_id not in vehicles:
-                print("Автомобиль с таким ID не найден.")
-                continue
-            work = input("Наименование работы: ").strip()
-            s_date = input_date("Дата выполнения (ДД.ММ.ГГГГ): ")
-            cost = input_float("Стоимость (руб): ")
-            rec = create_maintenance_record(
-                records, v_id, work, s_date, cost
-            )
-            save_maintenance(MAINTENANCE_FILE, records)
-            print(f"Запись о ТО #{rec['id']} добавлена.")
+            create_new_record_flow(records, vehicles, tasks)
         elif choice == "6":
-            r_id = input_int("Введите ID записи ТО для отмены: ")
-            if cancel_maintenance_record(records, r_id):
-                save_maintenance(MAINTENANCE_FILE, records)
-                print("Запись о ТО успешно отменена.")
-            else:
-                print("Запись с таким ID не найдена.")
-        elif choice == "7":
-            if not records:
-                print("Записи ТО отсутствуют.")
-            else:
-                for r in records:
-                    print(
-                        f"Запись #{r['id']} | Авто ID: {r['vehicle_id']} | "
-                        f"Работа: {r['work_name']} | "
-                        f"Дата: {r['service_date']} | "
-                        f"Цена: {r['cost']} руб."
-                    )
-        elif choice == "8":
-            sorted_v = sort_vehicles_by_mileage(vehicles)
-            show_vehicles_list(sorted_v)
+            show_records(records)
         elif choice == "0":
-            print("Сохранение данных и завершение работы...")
             save_vehicles(VEHICLES_FILE, vehicles)
-            save_maintenance(MAINTENANCE_FILE, records)
+            save_tasks(TASKS_FILE, tasks)
+            save_records(RECORDS_FILE, records)
+            print("Данные сохранены. Выход из программы.")
             break
-        else:
-            print("Неверный ввод. Попробуйте снова.")
 
 
 if __name__ == "__main__":
