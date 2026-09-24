@@ -1,103 +1,129 @@
 ﻿from typing import List
-from models import Vehicle, ServiceTask, MaintenanceRecord
-from models.vehicles import add_vehicle, find_vehicle_by_id, show_vehicles
-from models.tasks import add_task, show_tasks, find_task_by_id
-from models.records import create_record, show_records
+from models import User, Vehicle, Indicator, ServiceDate
+from models.users import find_user_by_id, show_users
+from models.vehicles import find_vehicle_by_id, show_vehicles
+from models.indicators import find_indicator_by_id, show_indicators
+from models.dates import show_dates
 from storage import (
-    load_vehicles,
-    save_vehicles,
-    load_tasks,
-    save_tasks,
-    load_records,
-    save_records,
+    load_users, save_users,
+    load_vehicles, save_vehicles,
+    load_indicators, save_indicators,
+    load_dates, save_dates
 )
 from utils import input_int
 
+USERS_FILE = "data/users.json"
 VEHICLES_FILE = "data/vehicles.json"
-TASKS_FILE = "data/tasks.json"
-RECORDS_FILE = "data/records.json"
+INDICATORS_FILE = "data/indicators.json"
+DATES_FILE = "data/dates.json"
 
 
-def create_new_record_flow(
-    records: List[MaintenanceRecord],
-    vehicles: List[Vehicle],
-    tasks: List[ServiceTask]
-) -> None:
-    if not vehicles or not tasks:
-        print(
-            "Ошибка: Для создания записи должны быть зарегистрированы "
-            "авто и работы."
-        )
+def add_user_flow(users: List[User]) -> None:
+    u_id = len(users) + 1
+    name = input("Имя пользователя: ")
+    phone = input("Телефон: ")
+    users.append(User(u_id, name, phone))
+    print("Пользователь добавлен.")
+
+
+def add_vehicle_flow(vehicles: List[Vehicle], users: List[User]) -> None:
+    if not users:
+        print("Сначала добавьте хотя бы одного пользователя!")
+        return
+    show_users(users)
+    u_id = input_int("Введите ID владельца: ")
+    owner = find_user_by_id(users, u_id)
+    if not owner:
+        print("Пользователь не найден!")
         return
 
+    v_id = len(vehicles) + 1
+    make = input("Марка: ")
+    model = input("Модель: ")
+    year = input_int("Год выпуска: ")
+    mileage = input_int("Пробег (км): ")
+    vehicles.append(Vehicle(v_id, make, model, year, mileage, owner))
+    print("Автомобиль добавлен.")
+
+
+def add_indicator_flow(indicators: List[Indicator]) -> None:
+    i_id = len(indicators) + 1
+    title = input("Название показателя: ")
+    target = input_int("Целевой пробег/норма (км): ")
+    cost = float(input_int("Стоимость (руб): "))
+    indicators.append(Indicator(i_id, title, target, cost))
+    print("Показатель добавлен.")
+
+
+def add_date_flow(
+    dates: List[ServiceDate],
+    vehicles: List[Vehicle],
+    indicators: List[Indicator]
+) -> None:
+    if not vehicles or not indicators:
+        print("Для назначения даты требуются добавленные авто и показатели!")
+        return
     show_vehicles(vehicles)
-    v_id = input_int("Введите ID автомобиля: ")
+    v_id = input_int("Введите ID авто: ")
     vehicle = find_vehicle_by_id(vehicles, v_id)
     if not vehicle:
         print("Автомобиль не найден!")
         return
 
-    show_tasks(tasks)
-    t_id = input_int("Введите ID работы: ")
-    task = find_task_by_id(tasks, t_id)
-    if not task:
-        print("Работа не найдена!")
+    show_indicators(indicators)
+    ind_id = input_int("Введите ID показателя: ")
+    indicator = find_indicator_by_id(indicators, ind_id)
+    if not indicator:
+        print("Показатель не найден!")
         return
 
-    rec_id = len(records) + 1
-    date_str = input("Введите планируемую дату (ГГГГ-ММ-ДД): ")
-    target_mileage = vehicle.mileage + task.interval_km
-
-    rec = create_record(
-        records, rec_id, vehicle, task, date_str, target_mileage
-    )
-    print(f"\nЗапись успешно создана!\n{rec}")
+    d_id = len(dates) + 1
+    date_str = input("Введите плановую дату (ГГГГ-ММ-ДД): ")
+    dates.append(ServiceDate(d_id, vehicle, indicator, date_str))
+    print("Дата обслуживания успешно запланирована.")
 
 
 def main() -> None:
-    vehicles = load_vehicles(VEHICLES_FILE)
-    tasks = load_tasks(TASKS_FILE)
-    records = load_records(RECORDS_FILE, vehicles, tasks)
+    users = load_users(USERS_FILE)
+    vehicles = load_vehicles(VEHICLES_FILE, users)
+    indicators = load_indicators(INDICATORS_FILE)
+    dates = load_dates(DATES_FILE, vehicles, indicators)
 
     while True:
-        print("\n=== Система планирования ТО автомобиля ===")
-        print("1. Показать список авто")
-        print("2. Добавить авто")
-        print("3. Показать виды ТО")
-        print("4. Добавить вид ТО")
-        print("5. Запланировать ТО")
-        print("6. Показать все записи ТО")
+        print("\n=== Управление ТО (Пользователь, Авто, Показатель, Дата) ===")
+        print("1. Показать пользователей")
+        print("2. Добавить пользователя")
+        print("3. Показать автомобили")
+        print("4. Добавить автомобиль")
+        print("5. Показать показатели")
+        print("6. Добавить показатель")
+        print("7. Показать запланированные даты ТО")
+        print("8. Назначить дату ТО")
         print("0. Выход")
 
         choice = input("Выберите действие: ")
         if choice == "1":
-            show_vehicles(vehicles)
+            show_users(users)
         elif choice == "2":
-            v_id = len(vehicles) + 1
-            make = input("Марка: ")
-            model = input("Модель: ")
-            year = input_int("Год выпуска: ")
-            mileage = input_int("Текущий пробег: ")
-            add_vehicle(vehicles, Vehicle(v_id, make, model, year, mileage))
-            print("Автомобиль добавлен.")
+            add_user_flow(users)
         elif choice == "3":
-            show_tasks(tasks)
+            show_vehicles(vehicles)
         elif choice == "4":
-            t_id = len(tasks) + 1
-            title = input("Название работы: ")
-            interval = input_int("Интервал (км): ")
-            cost = float(input_int("Стоимость (руб): "))
-            add_task(tasks, ServiceTask(t_id, title, interval, cost))
-            print("Вид работы добавлен.")
+            add_vehicle_flow(vehicles, users)
         elif choice == "5":
-            create_new_record_flow(records, vehicles, tasks)
+            show_indicators(indicators)
         elif choice == "6":
-            show_records(records)
+            add_indicator_flow(indicators)
+        elif choice == "7":
+            show_dates(dates)
+        elif choice == "8":
+            add_date_flow(dates, vehicles, indicators)
         elif choice == "0":
+            save_users(USERS_FILE, users)
             save_vehicles(VEHICLES_FILE, vehicles)
-            save_tasks(TASKS_FILE, tasks)
-            save_records(RECORDS_FILE, records)
-            print("Данные сохранены. Выход из программы.")
+            save_indicators(INDICATORS_FILE, indicators)
+            save_dates(DATES_FILE, dates)
+            print("Данные сохранены. Выход.")
             break
 
 

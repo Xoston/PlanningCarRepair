@@ -1,4 +1,5 @@
 ﻿from typing import List, Optional
+from models.users import User
 
 
 class Vehicle:
@@ -10,16 +11,17 @@ class Vehicle:
         make: str,
         model: str,
         year: int,
-        mileage: int
+        mileage: int,
+        owner: User
     ) -> None:
         self.id: int = vehicle_id
         self.make: str = make
         self.model: str = model
         self.year: int = year
         self.mileage: int = mileage
+        self.owner: User = owner
 
     def update_mileage(self, new_mileage: int) -> bool:
-        """Обновить пробег автомобиля."""
         if new_mileage >= self.mileage:
             self.mileage = new_mileage
             return True
@@ -27,13 +29,9 @@ class Vehicle:
 
     def __str__(self) -> str:
         return (
-            f"[{self.id}] {self.make} {self.model} "
-            f"({self.year} г.) — {self.mileage} км"
+            f"[{self.id}] {self.make} {self.model} ({self.year} г.) "
+            f"— {self.mileage} км | Владелец: {self.owner.name}"
         )
-
-
-def add_vehicle(vehicles: List[Vehicle], vehicle: Vehicle) -> None:
-    vehicles.append(vehicle)
 
 
 def find_vehicle_by_id(

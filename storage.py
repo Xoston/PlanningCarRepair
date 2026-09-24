@@ -1,26 +1,46 @@
 ﻿import json
 import os
 from typing import List
+from models.users import User
 from models.vehicles import Vehicle
-from models.tasks import ServiceTask
-from models.records import MaintenanceRecord
+from models.indicators import Indicator
+from models.dates import ServiceDate
 
 
-def load_vehicles(filepath: str) -> List[Vehicle]:
+def load_users(filepath: str) -> List[User]:
     if not os.path.exists(filepath):
         return []
     with open(filepath, "r", encoding="utf-8-sig") as f:
         data = json.load(f)
-        return [
-            Vehicle(
-                item["id"],
-                item["make"],
-                item["model"],
-                item["year"],
-                item["mileage"]
-            )
-            for item in data
-        ]
+        return [User(i["id"], i["name"], i["phone"]) for i in data]
+
+
+def save_users(filepath: str, users: List[User]) -> None:
+    data = [{"id": u.id, "name": u.name, "phone": u.phone} for u in users]
+    with open(filepath, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
+
+def load_vehicles(filepath: str, users: List[User]) -> List[Vehicle]:
+    if not os.path.exists(filepath):
+        return []
+    u_map = {u.id: u for u in users}
+    with open(filepath, "r", encoding="utf-8-sig") as f:
+        data = json.load(f)
+        vehicles = []
+        for item in data:
+            owner = u_map.get(item["user_id"])
+            if owner:
+                v = Vehicle(
+                    item["id"],
+                    item["make"],
+                    item["model"],
+                    item["year"],
+                    item["mileage"],
+                    owner
+                )
+                vehicles.append(v)
+        return vehicles
 
 
 def save_vehicles(filepath: str, vehicles: List[Vehicle]) -> None:
@@ -30,7 +50,8 @@ def save_vehicles(filepath: str, vehicles: List[Vehicle]) -> None:
             "make": v.make,
             "model": v.model,
             "year": v.year,
-            "mileage": v.mileage
+            "mileage": v.mileage,
+            "user_id": v.owner.id
         }
         for v in vehicles
     ]
@@ -38,69 +59,67 @@ def save_vehicles(filepath: str, vehicles: List[Vehicle]) -> None:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
 
-def load_tasks(filepath: str) -> List[ServiceTask]:
+def load_indicators(filepath: str) -> List[Indicator]:
     if not os.path.exists(filepath):
         return []
     with open(filepath, "r", encoding="utf-8-sig") as f:
         data = json.load(f)
-        return [ServiceTask.from_data(item) for item in data]
+        return [
+            Indicator(i["id"], i["title"], i["target_value"], float(i["cost"]))
+            for i in data
+        ]
 
 
-def save_tasks(filepath: str, tasks: List[ServiceTask]) -> None:
+def save_indicators(filepath: str, indicators: List[Indicator]) -> None:
     data = [
         {
-            "id": t.id,
-            "title": t.title,
-            "interval_km": t.interval_km,
-            "cost": t.cost
+            "id": ind.id,
+            "title": ind.title,
+            "target_value": ind.target_value,
+            "cost": ind.cost
         }
-        for t in tasks
+        for ind in indicators
     ]
     with open(filepath, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
 
-def load_records(
-    filepath: str,
-    vehicles: List[Vehicle],
-    tasks: List[ServiceTask]
-) -> List[MaintenanceRecord]:
+def load_dates(
+    filepath: str, vehicles: List[Vehicle], indicators: List[Indicator]
+) -> List[ServiceDate]:
     if not os.path.exists(filepath):
         return []
+    v_map = {v.id: v for v in vehicles}
+    i_map = {ind.id: ind for ind in indicators}
     with open(filepath, "r", encoding="utf-8-sig") as f:
         data = json.load(f)
-
-    v_map = {v.id: v for v in vehicles}
-    t_map = {t.id: t for t in tasks}
-    records = []
-
-    for item in data:
-        vehicle = v_map.get(item["vehicle_id"])
-        task = t_map.get(item["task_id"])
-        if vehicle and task:
-            rec = MaintenanceRecord(
-                record_id=item["id"],
-                vehicle=vehicle,
-                task=task,
-                scheduled_date=item["scheduled_date"],
-                mileage_at_service=item["mileage_at_service"],
-                is_completed=item["is_completed"]
-            )
-            records.append(rec)
-    return records
+        dates = []
+        for item in data:
+            v = v_map.get(item["vehicle_id"])
+            ind = i_map.get(item["indicator_id"])
+            if v and ind:
+                dates.append(
+                    ServiceDate(
+                        item["id"],
+                        v,
+                        ind,
+                        item["scheduled_date"],
+                        item["is_completed"]
+                    )
+                )
+        return dates
 
 
-def save_records(filepath: str, records: List[MaintenanceRecord]) -> None:
+def save_dates(filepath: str, dates: List[ServiceDate]) -> None:
     data = [
         {
-            "id": r.id,
-            "vehicle_id": r.vehicle.id,
-            "task_id": r.task.id,
-            "scheduled_date": r.scheduled_date,
-            "mileage_at_service": r.mileage_at_service,
-            "is_completed": r.is_completed
+            "id": d.id,
+            "vehicle_id": d.vehicle.id,
+            "indicator_id": d.indicator.id,
+            "scheduled_date": d.scheduled_date,
+            "is_completed": d.is_completed
         }
-        for r in records
+        for d in dates
     ]
     with open(filepath, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
