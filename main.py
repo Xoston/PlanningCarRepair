@@ -3,7 +3,14 @@ from models import Vehicle, ServiceTask, MaintenanceRecord
 from models.vehicles import add_vehicle, find_vehicle_by_id, show_vehicles
 from models.tasks import add_task, show_tasks, find_task_by_id
 from models.records import create_record, show_records
-from storage import load_vehicles, save_vehicles, load_tasks, save_tasks, load_records, save_records
+from storage import (
+    load_vehicles,
+    save_vehicles,
+    load_tasks,
+    save_tasks,
+    load_records,
+    save_records,
+)
 from utils import input_int
 
 VEHICLES_FILE = "data/vehicles.json"
@@ -17,7 +24,10 @@ def create_new_record_flow(
     tasks: List[ServiceTask]
 ) -> None:
     if not vehicles or not tasks:
-        print("Ошибка: Для создания записи должны быть зарегистрированы авто и работы.")
+        print(
+            "Ошибка: Для создания записи должны быть зарегистрированы "
+            "авто и работы."
+        )
         return
 
     show_vehicles(vehicles)
@@ -38,7 +48,9 @@ def create_new_record_flow(
     date_str = input("Введите планируемую дату (ГГГГ-ММ-ДД): ")
     target_mileage = vehicle.mileage + task.interval_km
 
-    rec = create_record(records, rec_id, vehicle, task, date_str, target_mileage)
+    rec = create_record(
+        records, rec_id, vehicle, task, date_str, target_mileage
+    )
     print(f"\nЗапись успешно создана!\n{rec}")
 
 

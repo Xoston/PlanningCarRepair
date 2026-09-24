@@ -1,4 +1,4 @@
-﻿from typing import List, Optional
+﻿from typing import List
 from models.vehicles import Vehicle
 from models.tasks import ServiceTask
 
@@ -36,9 +36,11 @@ class MaintenanceRecord:
         status = "Выполнено" if self.is_completed else "Запланировано"
         return (
             f"Запись #{self.id} [{status}]\n"
-            f"  Авто: {self.vehicle.make} {self.vehicle.model} (ID: {self.vehicle.id})\n"
+            f"  Авто: {self.vehicle.make} {self.vehicle.model} "
+            f"(ID: {self.vehicle.id})\n"
             f"  Работа: {self.task.title}\n"
-            f"  Дата: {self.scheduled_date} | Пробег ТО: {self.mileage_at_service} км"
+            f"  Дата: {self.scheduled_date} | "
+            f"Пробег ТО: {self.mileage_at_service} км"
         )
 
 

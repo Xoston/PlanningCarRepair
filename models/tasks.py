@@ -27,14 +27,19 @@ class ServiceTask:
         )
 
     def __str__(self) -> str:
-        return f"[{self.id}] {self.title} (каждые {self.interval_km} км) — {self.cost:.2f} руб."
+        return (
+            f"[{self.id}] {self.title} (каждые {self.interval_km} км) "
+            f"— {self.cost:.2f} руб."
+        )
 
 
 def add_task(tasks: List[ServiceTask], task: ServiceTask) -> None:
     tasks.append(task)
 
 
-def find_task_by_id(tasks: List[ServiceTask], task_id: int) -> Optional[ServiceTask]:
+def find_task_by_id(
+    tasks: List[ServiceTask], task_id: int
+) -> Optional[ServiceTask]:
     for t in tasks:
         if t.id == task_id:
             return t

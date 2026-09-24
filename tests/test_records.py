@@ -1,6 +1,6 @@
 ﻿from models.vehicles import Vehicle
 from models.tasks import ServiceTask
-from models.records import MaintenanceRecord, create_record
+from models.records import MaintenanceRecord
 
 
 def test_maintenance_record_creation():

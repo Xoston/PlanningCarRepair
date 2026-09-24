@@ -26,14 +26,19 @@ class Vehicle:
         return False
 
     def __str__(self) -> str:
-        return f"[{self.id}] {self.make} {self.model} ({self.year} г.) — {self.mileage} км"
+        return (
+            f"[{self.id}] {self.make} {self.model} "
+            f"({self.year} г.) — {self.mileage} км"
+        )
 
 
 def add_vehicle(vehicles: List[Vehicle], vehicle: Vehicle) -> None:
     vehicles.append(vehicle)
 
 
-def find_vehicle_by_id(vehicles: List[Vehicle], vehicle_id: int) -> Optional[Vehicle]:
+def find_vehicle_by_id(
+    vehicles: List[Vehicle], vehicle_id: int
+) -> Optional[Vehicle]:
     for v in vehicles:
         if v.id == vehicle_id:
             return v

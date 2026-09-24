@@ -11,7 +11,16 @@ def load_vehicles(filepath: str) -> List[Vehicle]:
         return []
     with open(filepath, "r", encoding="utf-8") as f:
         data = json.load(f)
-        return [Vehicle(item["id"], item["make"], item["model"], item["year"], item["mileage"]) for item in data]
+        return [
+            Vehicle(
+                item["id"],
+                item["make"],
+                item["model"],
+                item["year"],
+                item["mileage"]
+            )
+            for item in data
+        ]
 
 
 def save_vehicles(filepath: str, vehicles: List[Vehicle]) -> None:
@@ -51,7 +60,11 @@ def save_tasks(filepath: str, tasks: List[ServiceTask]) -> None:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
 
-def load_records(filepath: str, vehicles: List[Vehicle], tasks: List[ServiceTask]) -> List[MaintenanceRecord]:
+def load_records(
+    filepath: str,
+    vehicles: List[Vehicle],
+    tasks: List[ServiceTask]
+) -> List[MaintenanceRecord]:
     if not os.path.exists(filepath):
         return []
     with open(filepath, "r", encoding="utf-8") as f:
