@@ -1,1 +1,9 @@
-[{"id": 1, "vehicle_id": 1, "indicator_id": 1, "scheduled_date": "2026-10-01", "is_completed": false}]
+[
+    {
+        "id": 1,
+        "vehicle_id": 1,
+        "indicator_id": 1,
+        "scheduled_date": "2026-10-01",
+        "is_completed": false
+    }
+]
